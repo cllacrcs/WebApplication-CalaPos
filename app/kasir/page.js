@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const initialProducts = [
   { id: 1, name: "Keripik Singkong", category: "Keripik", price: 5000, stock: 30 },
@@ -22,12 +23,48 @@ const formatRupiah = (amount) =>
   }).format(amount);
 
 export default function KasirPage() {
-  const [products, setProducts] = useState(initialProducts);
-  const [cart, setCart] = useState([]);
+const [products, setProducts] = useState([]);
+const [loadingProducts, setLoadingProducts] = useState(true);
+const [productError, setProductError] = useState("");  const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Semua");
   const [payment, setPayment] = useState("");
   const [notice, setNotice] = useState("");
+  useEffect(() => {
+  async function loadProducts() {
+    setLoadingProducts(true);
+    setProductError("");
+
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        "id, name, category, selling_price, stock_quantity, stock_unit, is_active"
+      )
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Gagal mengambil produk:", error);
+      setProductError("Produk gagal dimuat. Silakan coba muat ulang halaman.");
+      setLoadingProducts(false);
+      return;
+    }
+
+    const mappedProducts = (data || []).map((product) => ({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      price: Number(product.selling_price),
+      stock: Number(product.stock_quantity),
+      unit: product.stock_unit,
+    }));
+
+    setProducts(mappedProducts);
+    setLoadingProducts(false);
+  }
+
+  loadProducts();
+}, []);
 
   const categories = [
     "Semua",
@@ -106,32 +143,59 @@ export default function KasirPage() {
     );
   }
 
-  function finishTransaction() {
-    if (cart.length === 0) {
-      setNotice("Keranjang masih kosong. Pilih produk terlebih dahulu.");
-      return;
-    }
 
-    if (paid < total) {
-      setNotice("Uang pembayaran belum mencukupi.");
-      return;
-    }
-
-    setProducts(
-      products.map((product) => {
-        const item = cart.find((cartItem) => cartItem.id === product.id);
-        return item
-          ? { ...product, stock: product.stock - item.quantity }
-          : product;
-      })
-    );
-
-    setCart([]);
-    setPayment("");
-    setNotice(
-      `Transaksi contoh berhasil! Kembalian: ${formatRupiah(change)}. Data belum tersimpan permanen.`
-    );
+async function finishTransaction() {
+  if (cart.length === 0) {
+    setNotice("Keranjang masih kosong. Pilih produk terlebih dahulu.");
+    return;
   }
+
+  if (paid < total) {
+    setNotice("Uang pembayaran belum mencukupi.");
+    return;
+  }
+
+  setNotice("Menyimpan transaksi...");
+
+  const { data, error } = await supabase.rpc("complete_sale", {
+    p_payment_amount: paid,
+    p_items: cart.map((item) => ({
+      product_id: item.id,
+      quantity: item.quantity,
+    })),
+  });
+
+  if (error) {
+    console.error("Gagal menyimpan transaksi:", error);
+    setNotice(`Transaksi gagal: ${error.message}`);
+    return;
+  }
+
+  setProducts((currentProducts) =>
+    currentProducts.map((product) => {
+      const item = cart.find(
+        (cartItem) => cartItem.id === product.id
+      );
+
+      return item
+        ? {
+            ...product,
+            stock: product.stock - item.quantity,
+          }
+        : product;
+    })
+  );
+
+  setCart([]);
+  setPayment("");
+
+  setNotice(
+    `Transaksi berhasil! No. struk: ${data.receipt_number}. ` +
+    `Total: ${formatRupiah(Number(data.total))}. ` +
+    `Kembalian: ${formatRupiah(Number(data.change_amount))}.`
+  );
+}
+
 
   return (
     <main className="min-h-screen bg-[#f7f8fa] p-4 text-slate-800 sm:p-6 lg:p-8">
@@ -158,8 +222,8 @@ export default function KasirPage() {
         </div>
 
         <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-          <strong>Mode demo:</strong> Produk dan stok di halaman ini masih
-          data contoh. Transaksi belum tersimpan ke database.
+          <strong>Data produk:</strong> Produk dan stok diambil dari database.
+Penyimpanan transaksi masih dalam tahap pengembangan.
         </div>
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_360px]">
@@ -195,10 +259,19 @@ export default function KasirPage() {
                 </button>
               ))}
             </div>
+              {loadingProducts && (
+  <p className="py-6 text-center text-sm text-slate-500">
+    Memuat produk...
+  </p>
+)}
 
+{productError && (
+  <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+    {productError}
+  </p>
+)}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <button
+{!loadingProducts && !productError && filteredProducts.map((product) => (                <button
                   key={product.id}
                   onClick={() => addToCart(product)}
                   disabled={product.stock === 0}
@@ -347,7 +420,7 @@ export default function KasirPage() {
                 onClick={finishTransaction}
                 className="w-full rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-700"
               >
-                Selesaikan transaksi demo
+                Selesaikan transaksi
               </button>
               <p className="text-center text-xs leading-5 text-slate-400">
                 Transaksi hanya simulasi dan belum tersimpan permanen.

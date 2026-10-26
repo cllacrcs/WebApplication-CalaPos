@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+
+# CalaPOS
+
+A web-based Point of Sale (POS) application designed for a small snack shop.
+
+CalaPOS aims to simplify daily cashier operations, product management, inventory tracking, and sales reporting.
+
+## Current Features
+
+- Dashboard for quick access to POS functions
+- Cashier interface with product search and cart
+- Product management interface
+- Basic product categories, prices, and stock information
+- Responsive web interface
+
+## Planned Features
+
+- Persistent database using Supabase
+- Sales transaction history
+- Inventory tracking for bulk snacks and repackaged products
+- Expense management
+- Sales and profit reports
+- Multi-user authentication and access control
+- Receipt printing support
+
+## Tech Stack
+
+- Next.js
+- React
+- JavaScript
+- Tailwind CSS
+- Git and GitHub
+- Supabase (planned)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js
+- npm
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+1. Clone the repository:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   git clone https://github.com/cllacrcs/WebApplication-CalaPos.git
+   ```
 
-## Learn More
+2. Navigate to the project folder:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   cd WebApplication-CalaPos
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Install dependencies:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+4. Start the development server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Open http://localhost:3000 in your browser.
+
+## Development Status
+
+CalaPOS is currently under development. The current cashier and product interfaces use temporary in-memory data. Database persistence, authentication, and production-ready transaction handling are planned improvements.
+
+## Author
+
+Developed as a personal web application project.
